@@ -1,0 +1,127 @@
+#intro video: https://youtu.be/axn-ni_NFoo?t=17
+#class url: https://classroom.udacity.com/courses/ud299/lessons/4378692847/concepts/48114089370923
+
+
+install vagrant #its a linux distribution for servers
+
+pwd - confirms your working directory
+/ - root  #shows the root file
+cd / #sends you to root
+ls - list #shows a list
+la -a #shows all the files even hidden ones
+ls -al #l shows a lists in the long format
+touch #writes files
+
+-------directories name---- #la -al
+home #home
+etc #configuration files
+var #variable files that change with time, like loggings, etc
+bin # executable binaries like the command "ls". required for boot up
+sbin #mantainance directory only accesible by root, binaires
+lib #libraries support the binaries
+usr #not necesary for boot
+
+--------
+
+$PATH #shows the directories linux will progress through. used to check if commands are not found
+
+------
+
+debian better ubuntu because is more stable.
+---
+Security:
+rule of less privilege #the minimun access necesary for each user, helps keep everything secured.
+su #this command changes as administrator all the time. shouldnt use it just in case you forget you are the superuser.
+sudo #super user command. 
+#create a user to replace sudo, that way you dont get hacked with the typical root user
+cat /etc/apt/sources.list #shows all the packages downloaded. list of repositories set up automatically. 
+
+sudo apt-get update #most linux dont update automatically so there are no problems like:
+sudo apt-get upgrade #linux doesnt do it automatically just in case. make sure to read new packages in this stage and test them in no user enviroments.
+#you can google packages
+sudo apt-get autoremove #clean what we are not going to use anymore.
+
+man apt-get # man is the manual, shows what the command can do
+
+finger #outputs the infor on usernames
+finger <username> #output the user info
+finger vagrant #shows vagrant version
+
+cat #this command lets you see the file.
+# cat /etc/passwd ## this file normally holds the users. It reads different fields divided by ":" 
+# username:x(historically use to hold encrypted passwords, not anymore):userid:groupid:(empty space or descirption of the user):home directory:script
+nano #allows to edit text in a file
+
+
+You have to remove "root" user (vagrant already does this) because every hacker is going to try it.
+sudo adduser <name> #to create a new user. and confirm it by the user exist by using the finger command like: "finger <name>"
+
+connecting as new user:
+ssh <name>@ip -p <port number> #looks like this: ssh student@127.0.0.1 -p 2222
+
+Give the new user sudo access:
+sudo cat /etc/sudoers #to read the file . note: on some systems you can use visudo program to edit this file (not ubuntu though)
+#you are going to see a line: "#includedir /etc/sudoers.d (this line tells "etc/sudores" to also add "etc/sudoers.d" in it. this is done so updates wont modify the file where all the users are "sudoers.d")
+sudo ls /etc/sudoers.d #to see what files are in it
+
+1) sudo cp /etc/sudoers.d/vagrant /etc/dusoers.d/estudents #copy the vagrant file and name it student
+2) sudo nano /etc/sudoers.d/student #edit the file. to change "Vagrant" for "student"
+
+
+METHODS OF AUTENTIFICATION
+# key based authentification: creates a key pair. 1 is public (user) and 1 is private (server) and they have to match (never generate it in the server. only in your pc "locally") 
+
+shh-keygen
+#then name it
+#then enter the passphrase. it generates 2 files. one with ".pub" temination. that is what we locate within our server
+
+#log into the server as the new user with sudo access
+mkdir .shh #creates a new directory where all the key related files must be stored
+touch .shh/authorized_keys # we create a file that stores authorized keys, stores public keys.
+
+#go to local machine
+cat .shh/<shh-keygenfile_name>/pub #copy that
+#go to server as new user with sudo access
+nano .shh/authorized_keys #paste the content and save it
+
+#set up specific file permision on autorized key files and .shh users
+chmod 700 .shh
+chmod 644 .shh/authorized_keys
+
+#now you can log again 
+ssh <name>@ip -p <port number> #looks like this: ssh student@127.0.0.1 -p 2222 -i ~/.shh/<shh-keygenfile_name>
+
+#disable the password based loggin
+sudo nano /etc/shh/sshd_config #we want to change "password authetification" to "no"
+sudo service shh restart
+
+#see who has what kind of permissions are granted
+ls -al #first name is user, second one is the group. normally they are the same.
+# Permitions:
+# r = read = 4
+# w = write = 2
+# x = execute = 1
+
+# example : user rw- or r-- or r-- = 6 4 4 (chmod)
+# you can use command "chgrp" to "change group"
+
+#example. imagine a file called "bash_history"
+sudo chown root .bash_history # chown is "change owner" of the file. it changes its permits too 
+
+
+FIREWALLS 
+#works by closing the ports that we want
+#common ports example: 80, 21 , 22, 443
+sudo ufw status #gives you the status of the predetermine ubuntu firewall
+sudo ufw defaul deny incoming #configures but does not turns it on yet
+sudo ufw defaul allow outgoing #configures but does not turns it on yet
+sudo ufw allow ssh #but if you are using a vagrant virtual machine your por is determined as port 2222. 
+sudo ufw allow 2222/tcp #is what you need to do in that case
+sudo ufw allow www #for now this server is only going to be used for a basic http server.
+#now you can enable firewall. IF MISS CONFIGURED THE UFW ACCESS TO SHH BEFORE YOU WILL BE LOCKED OUT OF THE SERVER!!!!!
+sudo ufw enable
+sudo ufw status #gives you the rules being used
+
+
+SERVER IS SET AND SECURE NOW!
+different servers (depending of the needs) just have different programs running and different ports enable.
